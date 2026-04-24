@@ -1,0 +1,156 @@
+# Hafta 8 — API Mantığı (REST & JSON Temelleri)
+
+## API Nedir?
+
+İki yazılımın birbiriyle konuşmasını sağlayan arayüzdür. Açılımı **Application Programming Interface** — Uygulama Programlama Arayüzü'dür.
+
+**Neden var?**
+
+Hava durumu uygulamasını açıyorsun, Adana'nın sıcaklığını görüyorsun. Bilgisayar bunu kendisi ölçmüyor — bir hava durumu servisine soruyor, cevap alıyor, ekrana yansıtıyor. Bu "sorma ve cevap alma" işlemi API üzerinden gerçekleşir.
+
+> Analoji: Restoran. Sen müşteri, mutfak backend, **garson API**. Mutfağa doğrudan girip yemek yapamazsın — garsona söylersin, garson mutfağa iletir, yemek gelir.
+
+---
+
+## REST API
+
+API mimarileri arasında en yaygın olanıdır. **Representational State Transfer.**
+
+**Çalışma mantığı:**
+
+- Her şey bir **kaynak (resource)**'tur: kullanıcı, ürün, sipariş...
+- Bu kaynaklara **URL** ile ulaşılır.
+- Ne yapılacağı **HTTP metoduyla** belirtilir.
+
+```
+https://api.example.com/users/42
+                         ↑      ↑
+                      kaynak   id
+```
+
+---
+
+## HTTP Metodları
+
+| Metod | Ne Yapar? | SQL Karşılığı |
+|---|---|---|
+| GET | Veri getir | SELECT |
+| POST | Yeni veri oluştur | INSERT |
+| PUT | Mevcut veriyi güncelle | UPDATE |
+| DELETE | Veriyi sil | DELETE |
+
+**Örnekler:**
+
+```
+GET    /users        → Tüm kullanıcıları getirir
+GET    /users/42     → 42 numaralı kullanıcıyı getirir
+POST   /users        → Yeni kullanıcı oluşturur
+PUT    /users/42     → 42 numaralı kullanıcıyı günceller
+DELETE /users/42     → 42 numaralı kullanıcıyı siler
+```
+
+---
+
+## HTTP Status Kodları
+
+Sunucu her cevapla birlikte bir **status kodu** da gönderir.
+
+| Kod | Anlamı |
+|---|---|
+| 200 | OK — başarılı |
+| 201 | Created — oluşturuldu |
+| 400 | Bad Request — hatalı istek |
+| 401 | Unauthorized — yetkisiz |
+| 404 | Not Found — bulunamadı |
+| 500 | Internal Server Error — sunucu hatası |
+
+---
+
+## JSON Yapısı
+
+API'ler veriyi genellikle **JSON (JavaScript Object Notation)** formatında gönderir ve alır. Python'daki `dict`e birebir benzer.
+
+```json
+{
+  "id": 42,
+  "name": "Emre",
+  "email": "emre@example.com",
+  "is_active": true,
+  "scores": [95, 87, 92],
+  "address": {
+    "city": "Adana",
+    "country": "Turkey"
+  }
+}
+```
+
+**JSON veri tipleri:**
+
+| Tip | Örnek |
+|---|---|
+| String | `"Emre"` |
+| Number | `42`, `3.14` |
+| Boolean | `true`, `false` |
+| Array | `[1, 2, 3]` |
+| Object | `{"key": "value"}` |
+| Null | `null` |
+
+**Python'da JSON ile çalışmak:**
+
+```python
+import json
+
+# JSON string → Python dict
+data = json.loads('{"name": "Emre", "age": 25}')
+
+# Python dict → JSON string
+json_str = json.dumps({"name": "Emre", "age": 25})
+```
+
+---
+
+## Endpoint Tasarımı
+
+**Endpoint** = API'nin belirli bir URL'idir. İyi bir endpoint tasarımı şu kurallara uyar:
+
+**Kaynak isimleri çoğul ve isim olmalı:**
+
+```
+✅ /users
+✅ /products
+❌ /getUser
+❌ /deleteProduct
+```
+
+**Hiyerarşi mantıklı olmalı:**
+
+```
+GET /users/42/orders     → 42 numaralı kullanıcının siparişleri
+GET /users/42/orders/7   → O kullanıcının 7 numaralı siparişi
+```
+
+**Basit bir kullanıcı API'si örneği:**
+
+```
+GET    /users           → Tüm kullanıcıları listele
+GET    /users/{id}      → Belirli kullanıcıyı getir
+POST   /users           → Yeni kullanıcı oluştur
+PUT    /users/{id}      → Kullanıcıyı güncelle
+DELETE /users/{id}      → Kullanıcıyı sil
+```
+
+Bu 5 endpoint bir kaynağın tüm **CRUD** işlemlerini kapsar: **C**reate, **R**ead, **U**pdate, **D**elete.
+
+---
+
+## İstek / Cevap Döngüsü
+
+```
+Client (sen)                    Server (API)
+    │                               │
+    │── GET /users/42 ─────────────→│
+    │                               │ veritabanına bak
+    │                               │ kullanıcıyı bul
+    │←─ 200 OK + JSON ─────────────│
+    │                               │
+```
